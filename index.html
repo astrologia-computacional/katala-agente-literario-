@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Katala — Agente Literario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&family=Instrument+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1a1208;
+  --parchment: #f5f0e8;
+  --cream: #faf7f2;
+  --gold: #b8860b;
+  --gold-light: #d4a843;
+  --rust: #8b3a2a;
+  --sage: #4a6741;
+  --border: #d4c9b0;
+  --muted: #7a6e5f;
+  --surface: #fffdf9;
+  --danger: #8b1a1a;
+  --success: #2d5a27;
+  --warn: #7a4f00;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Instrument Sans', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+.header {
+  background: var(--ink);
+  color: var(--parchment);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  border-bottom: 1px solid var(--gold);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--gold-light);
+}
+
+.logo span {
+  color: var(--parchment);
+  font-weight: 300;
+  font-style: italic;
+}
+
+.api-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+}
+
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #666;
+}
+.status-dot.ok { background: #4a9e4a; }
+.status-dot.error { background: var(--danger); }
+
+.api-key-btn {
+  background: none;
+  border: 1px solid rgba(212,168,67,0.4);
+  color: var(--gold-light);
+  padding: 4px 10px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.api-key-btn:hover { background: rgba(212,168,67,0.1); }
+
+/* LAYOUT */
+.app-body {
+  display: flex;
+  flex: 1;
+  height: calc(100vh - 56px);
+  overflow: hidden;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 220px;
+  background: var(--ink);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(212,168,67,0.2);
+  overflow-y: auto;
+}
+
+.nav-section {
+  padding: 1.2rem 0 0.5rem;
+}
+
+.nav-label {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(212,168,67,0.5);
+  padding: 0 1.2rem;
+  margin-bottom: 6px;
+  font-family: 'DM Mono', monospace;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 1.2rem;
+  cursor: pointer;
+  color: rgba(245,240,232,0.6);
+  font-size: 13px;
+  transition: all 0.15s;
+  border-left: 2px solid transparent;
+  position: relative;
+}
+
+.nav-item:hover { color: var(--parchment); background: rgba(255,255,255,0.04); }
+.nav-item.active {
+  color: var(--gold-light);
+  border-left-color: var(--gold);
+  background: rgba(212,168,67,0.08);
+}
+
+.nav-icon { font-size: 14px; width: 16px; text-align: center; }
+
+.nav-badge {
+  margin-left: auto;
+  background: var(--rust);
+  color: white;
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 99px;
+  font-family: 'DM Mono', monospace;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 1rem 1.2rem;
+  border-top: 1px solid rgba(212,168,67,0.15);
+  font-size: 11px;
+  color: rgba(245,240,232,0.25);
+  font-family: 'DM Mono', monospace;
+  line-height: 1.6;
+}
+
+/* MAIN CONTENT */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel { display: none; flex: 1; flex-direction: column; }
+.panel.active { display: flex; }
+
+/* PANEL HEADER */
+.panel-header {
+  padding: 1.5rem 2rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.panel-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.panel-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* CARDS */
+.panel-body {
+  padding: 1.5rem 2rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* FORMS */
+label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+  margin-top: 12px;
+  font-family: 'DM Mono', monospace;
+}
+label:first-child { margin-top: 0; }
+
+input[type=text], input[type=password], textarea, select {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: 'Instrument Sans', sans-serif;
+  background: var(--parchment);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--ink);
+  transition: border-color 0.15s;
+}
+textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+/* BUTTONS */
+.btn {
+  padding: 7px 16px;
+  font-size: 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--ink);
+  font-family: 'Instrument Sans', sans-serif;
+  font-weight: 500;
+  transition: all 0.15s;
+  letter-spacing: 0.02em;
+}
+.btn:hover { background: var(--parchment); }
+.btn-primary {
+  background: var(--ink);
+  color: var(--parchment);
+  border-color: var(--ink);
+}
+.btn-primary:hover { background: #2d2010; }
+.btn-gold {
+  background: var(--gold);
+  color: white;
+  border-color: var(--gold);
+}
+.btn-gold:hover { background: var(--gold-light); border-color: var(--gold-light); }
+.btn-danger { color: var(--danger); border-color: var(--danger); }
+.btn-danger:hover { background: #fff0f0; }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* TAGS */
+.tag {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.04em;
+}
+.tag-gold { background: #fdf3d7; color: var(--warn); border: 1px solid #e8c96a; }
+.tag-rust { background: #fdf0ed; color: var(--rust); border: 1px solid #d4836b; }
+.tag-sage { background: #edf4ec; color: var(--sage); border: 1px solid #7aad74; }
+.tag-muted { background: var(--parchment); color: var(--muted); border: 1px solid var(--border); }
+.tag-danger { background: #fdf0f0; color: var(--danger); border: 1px solid #d48080; }
+
+/* ANALYSIS RESULTS */
+.result-block {
+  border-left: 3px solid;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  border-radius: 0 3px 3px 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.result-block.danger { border-color: var(--danger); background: #fdf5f5; color: #5a1010; }
+.result-block.warn { border-color: var(--gold); background: #fdf8ed; color: #5a3d00; }
+.result-block.ok { border-color: var(--sage); background: #f0f7ef; color: #1e4019; }
+.result-block.info { border-color: #6688aa; background: #f0f4f8; color: #1e3050; }
+.result-block .rb-label {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 4px;
+  opacity: 0.7;
+}
+
+/* LOADING */
+.loading {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 1rem 0;
+  font-style: italic;
+  font-family: 'Cormorant Garamond', serif;
+}
+.loading.active { display: flex; }
+.pulse { display: flex; gap: 4px; }
+.pulse span {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: pb 1.2s ease-in-out infinite;
+}
+.pulse span:nth-child(2) { animation-delay: 0.2s; }
+.pulse span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes pb { 0%,80%,100%{opacity:.2}40%{opacity:1} }
+
+/* MANUSCRIPT UPLOAD AREA */
+.upload-area {
+  border: 2px dashed var(--border);
+  border-radius: 4px;
+  padding: 2.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--parchment);
+}
+.upload-area:hover, .upload-area.dragover {
+  border-color: var(--gold);
+  background: #fdf8ed;
+}
+.upload-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+.upload-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.upload-sub { font-size: 12px; color: var(--muted); }
+
+/* MANUSCRIPT VIEWER */
+.ms-viewer {
+  background: var(--parchment);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.5rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  line-height: 1.8;
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  color: var(--ink);
+}
+
+/* STATS ROW */
+.stats-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.stat-pill {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+}
+.stat-pill strong {
+  color: var(--ink);
+  font-size: 15px;
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+}
+
+/* CHARS LIST */
+.char-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.char-row:last-child { border-bottom: none; }
+.char-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 500;
+  font-family: 'Cormorant Garamond', serif;
+  flex-shrink: 0;
+}
+.char-info { flex: 1; }
+.char-name { font-size: 14px; font-weight: 500; font-family: 'Cormorant Garamond', serif; }
+.char-meta { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+
+/* MODAL */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(26,18,8,0.7);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+}
+.modal-close {
+  float: right;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--muted);
+  margin-top: -4px;
+}
+
+/* EMPTY STATE */
+.empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--muted);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  font-style: italic;
+}
+
+/* DIVIDER */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1rem 0;
+}
+
+/* COUNTER */
+.counter {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+  margin-top: 3px;
+  font-family: 'DM Mono', monospace;
+}
+
+/* PROGRESS */
+.progress-bar {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: var(--ink);
+  color: var(--parchment);
+  padding: 10px 18px;
+  border-radius: 3px;
+  font-size: 13px;
+  border-left: 3px solid var(--gold);
+  z-index: 300;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.25s;
+  pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* CHAPTER ITEM */
+.chapter-item {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.chapter-item:hover { border-color: var(--gold); }
+.chapter-item .ch-num {
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+}
+.chapter-item .ch-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  font-weight: 500;
+}
+.chapter-item .ch-meta {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ANALYSIS TABS */
+.analysis-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+.atab {
+  padding: 8px 16px;
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  font-family: 'Instrument Sans', sans-serif;
+  transition: all 0.15s;
+}
+.atab.active { color: var(--ink); border-bottom-color: var(--gold); }
+.atab:hover:not(.active) { color: var(--ink); }
+
+.atab-panel { display: none; }
+.atab-panel.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">Katala <span>— Agente Literario</span></div>
+  <div class="api-status">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">sin API key</span>
+    <button class="api-key-btn" onclick="openApiModal()">Configurar</button>
+  </div>
+</header>
+
+<div class="app-body">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="nav-section">
+      <div class="nav-label">Proyecto</div>
+      <div class="nav-item active" onclick="showPanel('manuscrito')">
+        <span class="nav-icon">📜</span> Manuscrito
+      </div>
+      <div class="nav-item" onclick="showPanel('personajes')">
+        <span class="nav-icon">👤</span> Personajes
+      </div>
+      <div class="nav-item" onclick="showPanel('capitulos')">
+        <span class="nav-icon">📑</span> Capítulos
+      </div>
+      <div class="nav-item" onclick="showPanel('subtramas')">
+        <span class="nav-icon">🔀</span> Subtramas
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Análisis IA</div>
+      <div class="nav-item" onclick="showPanel('analisis')">
+        <span class="nav-icon">🔍</span> Análisis completo
+        <span class="nav-badge" id="issues-badge" style="display:none">!</span>
+      </div>
+      <div class="nav-item" onclick="showPanel('continuidad')">
+        <span class="nav-icon">🧵</span> Continuidad
+      </div>
+      <div class="nav-item" onclick="showPanel('personajes-analisis')">
+        <span class="nav-icon">🎭</span> Arcos
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Edición</div>
+      <div class="nav-item" onclick="showPanel('edicion')">
+        <span class="nav-icon">✏️</span> Editor gramatical
+      </div>
+      <div class="nav-item" onclick="showPanel('descripciones')">
+        <span class="nav-icon">🖼</span> Descripciones
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      Katala v1.0<br>
+      Arlete Sam © 2025<br>
+      <span id="word-count-sidebar">— palabras</span>
+    </div>
+  </nav>
+
+  <!-- MAIN PANELS -->
+  <main class="main">
+
+    <!-- ═══ MANUSCRITO ═══ -->
+    <div class="panel active" id="panel-manuscrito">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Manuscrito</div>
+          <div class="panel-subtitle">Carga tu borrador — el sistema lo usará como base de todos los análisis</div>
+        </div>
+        <div class="row">
+          <button class="btn btn-sm" onclick="document.getElementById('file-input').click()">Subir archivo</button>
+          <button class="btn btn-primary btn-sm" onclick="openDriveModal()">Desde Google Drive</button>
+        </div>
+      </div>
+      <div class="panel-body">
+
+        <!-- Stats -->
+        <div class="stats-row" id="ms-stats" style="display:none">
+          <div class="stat-pill"><strong id="stat-words">—</strong>palabras</div>
+          <div class="stat-pill"><strong id="stat-chars">—</strong>caracteres</div>
+          <div class="stat-pill"><strong id="stat-pages">—</strong>páginas aprox.</div>
+          <div class="stat-pill"><strong id="stat-read">—</strong>min. lectura</div>
+        </div>
+
+        <!-- Upload area -->
+        <div id="upload-area-wrap">
+          <div class="upload-area" id="upload-area"
+            ondragover="e.preventDefault();this.classList.add('dragover')"
+            ondragleave="this.classList.remove('dragover')"
+            ondrop="handleDrop(event)"
+            onclick="document.getElementById('file-input').click()">
+            <div class="upload-icon">📜</div>
+            <div class="upload-title">Arrastra tu manuscrito aquí</div>
+            <div class="upload-sub">Acepta .txt, .docx (texto extraído), o pega el texto abajo</div>
+          </div>
+          <input type="file" id="file-input" accept=".txt,.docx,.doc,.md" style="display:none" onchange="handleFile(event)">
+
+          <div style="margin: 1rem 0; text-align:center; color:var(--muted); font-size:12px">— o pega el texto directamente —</div>
+
+          <textarea id="ms-paste" placeholder="Pega aquí el texto de tu manuscrito..." style="min-height:180px" oninput="updateManuscriptFromPaste()"></textarea>
+          <div class="counter" id="paste-counter"></div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn btn-gold" onclick="loadManuscriptFromPaste()">Cargar texto</button>
+            <button class="btn btn-sm" onclick="clearManuscript()">Limpiar</button>
+          </div>
+        </div>
+
+        <!-- Manuscript preview -->
+        <div id="ms-preview-wrap" style="display:none; margin-top:1rem">
+          <div class="card-title" style="margin-bottom:8px">
+            Vista previa del manuscrito
+            <button class="btn btn-sm btn-danger" onclick="clearManuscript()" style="margin-left:auto">Eliminar</button>
+          </div>
+          <div class="ms-viewer" id="ms-viewer"></div>
+          <div style="margin-top:1rem" class="row">
+            <button class="btn btn-gold" onclick="showPanel('analisis');analizarManuscritoCompleto()">
+              Analizar manuscrito completo →
+            </button>
+            <button class="btn" onclick="showPanel('edicion')">Ir a edición gramatical →</button>
+          </div>
+        </div>
+
+        <!-- Project context -->
+        <div class="card" style="margin-top:1.5rem">
+          <div class="card-title">📋 Contexto del proyecto</div>
+          <label>Título</label>
+          <input type="text" id="ctx-titulo" placeholder="Katala: La sangre no miente" />
+          <label>Género y tono</label>
+          <input type="text" id="ctx-genero" placeholder="Novela histórica, oscura y romántica, golfo de Guinea s.XIX" />
+          <label>Conflicto central</label>
+          <input type="text" id="ctx-conflicto" placeholder="La identidad y el origen en una isla fundada sobre mentiras" />
+          <label>Notas especiales para el análisis</label>
+          <textarea id="ctx-notas" placeholder="Cosas que el sistema debe saber: qué escenas ya están escritas, qué decidiste cambiar, decisiones narrativas importantes..." style="min-height:70px"></textarea>
+          <div class="row" style="margin-top:10px">
+            <button class="btn btn-primary" onclick="saveContext()">Guardar contexto</button>
+            <span id="ctx-saved" style="font-size:12px;color:var(--sage);display:none">✓ Guardado</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PERSONAJES ═══ -->
+    <div class="panel" id="panel-personajes">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Personajes</div>
+          <div class="panel-subtitle">Fichas de memoria para el análisis de continuidad</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openCharModal()">+ Nuevo personaje</button>
+      </div>
+      <div class="panel-body">
+        <div id="chars-list"><div class="empty">Aún no has añadido personajes</div></div>
+      </div>
+    </div>
+
+    <!-- ═══ CAPÍTULOS ═══ -->
+    <div class="panel" id="panel-capitulos">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Capítulos</div>
+          <div class="panel-subtitle">Estructura y estado de cada capítulo</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openCapModal()">+ Añadir capítulo</button>
+      </div>
+      <div class="panel-body">
+        <div id="caps-list"><div class="empty">Aún no has añadido capítulos</div></div>
+      </div>
+    </div>
+
+    <!-- ═══ SUBTRAMAS ═══ -->
+    <div class="panel" id="panel-subtramas">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Subtramas</div>
+          <div class="panel-subtitle">Hilos narrativos secundarios y su estado</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openSubtramaModal()">+ Nueva subtrama</button>
+      </div>
+      <div class="panel-body">
+        <div id="subtramas-list"><div class="empty">Aún no has añadido subtramas</div></div>
+      </div>
+    </div>
+
+    <!-- ═══ ANÁLISIS COMPLETO ═══ -->
+    <div class="panel" id="panel-analisis">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Análisis completo</div>
+          <div class="panel-subtitle">La IA lee todo el contexto y detecta problemas reales en tu manuscrito</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="analysis-tabs">
+          <button class="atab active" onclick="switchAtab('trama')">Trama y agujeros</button>
+          <button class="atab" onclick="switchAtab('personajes')">Personajes</button>
+          <button class="atab" onclick="switchAtab('ritmo')">Ritmo y tensión</button>
+          <button class="atab" onclick="switchAtab('escenas')">Escenas faltantes</button>
+        </div>
+
+        <div class="atab-panel active" id="atab-trama">
+          <div class="row" style="margin-bottom:1rem">
+            <button class="btn btn-gold" onclick="analizarManuscritoCompleto()">Analizar trama y agujeros →</button>
+          </div>
+          <div class="loading" id="loading-trama">
+            <div class="pulse"><span></span><span></span><span></span></div>
+            Leyendo el manuscrito completo...
+          </div>
+          <div id="result-trama"></div>
+        </div>
+
+        <div class="atab-panel" id="atab-personajes">
+          <div class="row" style="margin-bottom:1rem">
+            <button class="btn btn-gold" onclick="analizarPersonajesIA()">Analizar arcos y desarrollo →</button>
+          </div>
+          <div class="loading" id="loading-pers-analisis">
+            <div class="pulse"><span></span><span></span><span></span></div>
+            Analizando personajes...
+          </div>
+          <div id="result-pers-analisis"></div>
+        </div>
+
+        <div class="atab-panel" id="atab-ritmo">
+          <div class="row" style="margin-bottom:1rem">
+            <button class="btn btn-gold" onclick="analizarRitmo()">Analizar ritmo y tensión →</button>
+          </div>
+          <div class="loading" id="loading-ritmo">
+            <div class="pulse"><span></span><span></span><span></span></div>
+            Evaluando la curva narrativa...
+          </div>
+          <div id="result-ritmo"></div>
+        </div>
+
+        <div class="atab-panel" id="atab-escenas">
+          <div class="row" style="margin-bottom:1rem">
+            <button class="btn btn-gold" onclick="analizarEscenasFaltantes()">Detectar escenas faltantes →</button>
+          </div>
+          <div class="loading" id="loading-escenas">
+            <div class="pulse"><span></span><span></span><span></span></div>
+            Buscando huecos narrativos...
+          </div>
+          <div id="result-escenas"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ CONTINUIDAD ═══ -->
+    <div class="panel" id="panel-continuidad">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Continuidad</div>
+          <div class="panel-subtitle">Detecta inconsistencias: personajes en el lugar equivocado, tramas olvidadas, contradicciones</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="card">
+          <div class="card-title">Verificar continuidad específica</div>
+          <label>¿Qué quieres verificar?</label>
+          <textarea id="cont-query" placeholder="Ej: ¿Dónde está Grey en los capítulos 8-12? ¿He mencionado el ritual de Lady Quio y luego lo he explicado? ¿Aparece Owen en alguna escena donde debería estar ausente?" style="min-height:80px"></textarea>
+          <div class="row" style="margin-top:10px">
+            <button class="btn btn-gold" onclick="verificarContinuidad()">Verificar →</button>
+            <button class="btn btn-primary" onclick="continuidad_general()">Revisión general →</button>
+          </div>
+        </div>
+        <div class="loading" id="loading-cont">
+          <div class="pulse"><span></span><span></span><span></span></div>
+          Verificando continuidad...
+        </div>
+        <div id="result-cont"></div>
+      </div>
+    </div>
+
+    <!-- ═══ ARCOS ═══ -->
+    <div class="panel" id="panel-personajes-analisis">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Arcos de personaje</div>
+          <div class="panel-subtitle">Analiza si cada personaje evoluciona de manera coherente</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="card">
+          <label>Analizar personaje específico</label>
+          <input type="text" id="arco-personaje" placeholder="Nombre del personaje (deja vacío para analizar todos)" />
+          <div class="row" style="margin-top:10px">
+            <button class="btn btn-gold" onclick="analizarArcoPersonaje()">Analizar arco →</button>
+          </div>
+        </div>
+        <div class="loading" id="loading-arcos">
+          <div class="pulse"><span></span><span></span><span></span></div>
+          Analizando evolución del personaje...
+        </div>
+        <div id="result-arcos"></div>
+      </div>
+    </div>
+
+    <!-- ═══ EDITOR GRAMATICAL ═══ -->
+    <div class="panel" id="panel-edicion">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Editor gramatical</div>
+          <div class="panel-subtitle">Corrección ortográfica, gramatical y de puntuación — sin tocar tu voz</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="card">
+          <div class="row" style="margin-bottom:12px;gap:6px">
+            <button class="btn btn-sm" onclick="setEdMode('gramatica')" id="ed-btn-gramatica">Gramática</button>
+            <button class="btn btn-sm" onclick="setEdMode('estilo')" id="ed-btn-estilo">+ Fluidez</button>
+            <button class="btn btn-sm" onclick="setEdMode('dialogo')" id="ed-btn-dialogo">Diálogos</button>
+            <button class="btn btn-sm" onclick="setEdMode('descripcion')" id="ed-btn-descripcion">Descripciones</button>
+          </div>
+          <label>Texto a revisar</label>
+          <textarea id="ed-texto" placeholder="Pega aquí el fragmento que quieres revisar..." style="min-height:200px" oninput="updateEdCounter()"></textarea>
+          <div class="counter" id="ed-counter"></div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn btn-gold" onclick="editarTexto()">Revisar →</button>
+            <button class="btn btn-sm" onclick="document.getElementById('ed-texto').value='';document.getElementById('ed-counter').textContent=''">Limpiar</button>
+          </div>
+        </div>
+        <div class="loading" id="loading-edicion">
+          <div class="pulse"><span></span><span></span><span></span></div>
+          Revisando el texto...
+        </div>
+        <div id="result-edicion"></div>
+      </div>
+    </div>
+
+    <!-- ═══ DESCRIPCIONES ═══ -->
+    <div class="panel" id="panel-descripciones">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Guía de descripciones</div>
+          <div class="panel-subtitle">Enriquece el ambiente sin frenar el ritmo</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="card">
+          <label>Fragmento a enriquecer (o deja vacío para guía general)</label>
+          <textarea id="desc-texto" placeholder="Pega aquí el fragmento donde necesitas mejorar la descripción ambiental..." style="min-height:140px"></textarea>
+          <label>Espacio o escenario</label>
+          <input type="text" id="desc-espacio" placeholder="Ej: Porktown de noche, el puerto al amanecer, el dormitorio de Nané con velas" />
+          <div class="row" style="margin-top:10px">
+            <button class="btn btn-gold" onclick="mejorarDescripcion()">Enriquecer →</button>
+            <button class="btn" onclick="guiaDescripciones()">Guía general para Katala →</button>
+          </div>
+        </div>
+        <div class="loading" id="loading-desc">
+          <div class="pulse"><span></span><span></span><span></span></div>
+          Trabajando en las descripciones...
+        </div>
+        <div id="result-desc"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODAL: API KEY -->
+<div class="modal-overlay" id="modal-api">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-api')">✕</button>
+    <div class="modal-title">Configurar API Key</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;line-height:1.6">
+      Necesitas una API key de Anthropic para que el análisis funcione.
+      Obtenla en <a href="https://console.anthropic.com" target="_blank" style="color:var(--gold)">console.anthropic.com</a>.
+      Se guarda solo en tu navegador, nunca se envía a ningún servidor externo.
+    </p>
+    <label>Tu API Key</label>
+    <input type="password" id="api-key-input" placeholder="sk-ant-..." />
+    <div class="row" style="margin-top:12px">
+      <button class="btn btn-gold" onclick="saveApiKey()">Guardar y verificar</button>
+      <button class="btn" onclick="closeModal('modal-api')">Cancelar</button>
+    </div>
+    <div id="api-test-result" style="margin-top:10px;font-size:13px;"></div>
+  </div>
+</div>
+
+<!-- MODAL: DRIVE -->
+<div class="modal-overlay" id="modal-drive">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-drive')">✕</button>
+    <div class="modal-title">Cargar desde Google Drive</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;line-height:1.6">
+      Para cargar desde Drive, exporta tu documento como archivo .txt desde
+      Archivo → Descargar → Texto sin formato, y luego súbelo aquí.
+    </p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;line-height:1.6">
+      O si usas este sistema desde Claude.ai con Google Drive conectado, 
+      puedes pegar el texto directamente en el área de texto del manuscrito.
+    </p>
+    <button class="btn btn-primary" onclick="closeModal('modal-drive');document.getElementById('file-input').click()">
+      Subir archivo exportado
+    </button>
+  </div>
+</div>
+
+<!-- MODAL: PERSONAJE -->
+<div class="modal-overlay" id="modal-char">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-char')">✕</button>
+    <div class="modal-title">Nuevo personaje</div>
+    <div class="grid2">
+      <div><label>Nombre</label><input type="text" id="ch-nombre" placeholder="Nombre completo" /></div>
+      <div><label>Rol</label>
+        <select id="ch-rol">
+          <option>Protagonista</option><option>Deuteragonista</option>
+          <option>Antagonista</option><option>Amor interés</option>
+          <option>Apoyo</option><option>Secundario</option>
+        </select>
+      </div>
+    </div>
+    <label>Motivación</label><input type="text" id="ch-motivacion" placeholder="¿Qué quiere más que nada?" />
+    <label>Miedo / herida interna</label><input type="text" id="ch-miedo" placeholder="¿Qué lo define o frena?" />
+    <label>Arco narrativo</label><input type="text" id="ch-arco" placeholder="¿Cómo cambia?" />
+    <label>Secretos / información clave</label><textarea id="ch-secretos" style="min-height:60px" placeholder="Lo que el lector no sabe, lo que otros personajes no saben..."></textarea>
+    <label>Subtramas en las que participa</label><input type="text" id="ch-subtramas" placeholder="Ej: romance con Kael, la búsqueda de Adelaida" />
+    <div class="row" style="margin-top:14px">
+      <button class="btn btn-gold" onclick="addChar()">Guardar personaje</button>
+      <button class="btn" onclick="closeModal('modal-char')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CAPÍTULO -->
+<div class="modal-overlay" id="modal-cap">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-cap')">✕</button>
+    <div class="modal-title">Añadir capítulo</div>
+    <div class="grid2">
+      <div><label>Número</label><input type="text" id="cap-num" placeholder="1" /></div>
+      <div><label>Título</label><input type="text" id="cap-titulo" placeholder="Título o descripción" /></div>
+    </div>
+    <label>POV</label><input type="text" id="cap-pov" placeholder="¿Desde qué personaje?" />
+    <label>Estado</label>
+    <select id="cap-estado">
+      <option value="borrador">Borrador</option>
+      <option value="editado">Editado</option>
+      <option value="pendiente">Pendiente de escribir</option>
+    </select>
+    <label>Resumen de lo que ocurre</label>
+    <textarea id="cap-resumen" placeholder="Lo esencial..." style="min-height:70px"></textarea>
+    <label>Función narrativa</label>
+    <input type="text" id="cap-funcion" placeholder="Ej: giro, revelación, presentación, clímax" />
+    <label>Subtramas activas</label>
+    <input type="text" id="cap-subtramas" placeholder="Ej: romance A, conflicto Owen" />
+    <label>Nivel de tensión (1-10)</label>
+    <input type="text" id="cap-tension" placeholder="5" style="width:80px" />
+    <div class="row" style="margin-top:14px">
+      <button class="btn btn-gold" onclick="addCap()">Guardar capítulo</button>
+      <button class="btn" onclick="closeModal('modal-cap')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SUBTRAMA -->
+<div class="modal-overlay" id="modal-subtrama">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-subtrama')">✕</button>
+    <div class="modal-title">Nueva subtrama</div>
+    <div class="grid2">
+      <div><label>Nombre</label><input type="text" id="st-nombre" placeholder="El romance prohibido" /></div>
+      <div><label>Tipo</label>
+        <select id="st-tipo">
+          <option>Romance</option><option>Conflicto interno</option><option>Rivalidad</option>
+          <option>Secreto / revelación</option><option>Redención</option><option>Traición</option>
+          <option>Búsqueda</option><option>Familiar / pasado</option><option>Político</option>
+        </select>
+      </div>
+    </div>
+    <label>Personajes implicados</label><input type="text" id="st-personajes" placeholder="Ej: Kael y Quira" />
+    <label>Inicio</label><input type="text" id="st-inicio" placeholder="Cap. o momento donde arranca" />
+    <label>Cierre previsto</label><input type="text" id="st-cierre" placeholder="Cap. o momento donde se resuelve" />
+    <label>Impacto en la trama principal</label>
+    <textarea id="st-impacto" placeholder="¿Cómo afecta al conflicto central?" style="min-height:55px"></textarea>
+    <div class="row" style="margin-top:14px">
+      <button class="btn btn-gold" onclick="addSubtrama()">Guardar subtrama</button>
+      <button class="btn" onclick="closeModal('modal-subtrama')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let state = {
+  apiKey: '',
+  manuscrito: '',
+  contexto: {},
+  personajes: [],
+  capitulos: [],
+  subtramas: [],
+};
+let edMode = 'gramatica';
+
+// ═══════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════
+function saveState() {
+  try { localStorage.setItem('katala-state', JSON.stringify(state)); } catch(e) {}
+}
+function loadState() {
+  try {
+    const s = localStorage.getItem('katala-state');
+    if (s) {
+      state = { ...state, ...JSON.parse(s) };
+      if (state.apiKey) updateApiStatus(true);
+      if (state.manuscrito) showManuscript(state.manuscrito);
+      if (state.contexto) populateContext();
+      renderChars(); renderCaps(); renderSubtramas();
+    }
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id)?.classList.add('active');
+  event?.currentTarget?.classList.add('active');
+}
+
+// ═══════════════════════════════════════
+// API KEY
+// ═══════════════════════════════════════
+function openApiModal() { document.getElementById('modal-api').classList.add('active'); }
+function updateApiStatus(ok) {
+  document.getElementById('status-dot').className = 'status-dot ' + (ok ? 'ok' : 'error');
+  document.getElementById('status-text').textContent = ok ? 'API conectada' : 'sin API key';
+}
+async function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) return;
+  state.apiKey = key;
+  saveState();
+  const res = document.getElementById('api-test-result');
+  res.textContent = 'Verificando...';
+  res.style.color = 'var(--muted)';
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 10, messages: [{ role: 'user', content: 'ok' }] })
+    });
+    if (r.ok || r.status === 400) {
+      res.textContent = '✓ API key válida';
+      res.style.color = 'var(--sage)';
+      updateApiStatus(true);
+      setTimeout(() => closeModal('modal-api'), 1500);
+    } else {
+      res.textContent = '✗ API key inválida';
+      res.style.color = 'var(--danger)';
+      updateApiStatus(false);
+    }
+  } catch(e) {
+    res.textContent = '✗ Error de conexión';
+    res.style.color = 'var(--danger)';
+  }
+}
+
+// ═══════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════
+function openDriveModal() { document.getElementById('modal-drive').classList.add('active'); }
+function openCharModal() { document.getElementById('modal-char').classList.add('active'); }
+function openCapModal() { document.getElementById('modal-cap').classList.add('active'); }
+function openSubtramaModal() { document.getElementById('modal-subtrama').classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+// ═══════════════════════════════════════
+// MANUSCRIPT
+// ═══════════════════════════════════════
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-area').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) processFile(file);
+}
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (file) processFile(file);
+}
+function processFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target.result;
+    loadManuscript(text);
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+function updateManuscriptFromPaste() {
+  const v = document.getElementById('ms-paste').value;
+  const w = v.trim().split(/\s+/).filter(Boolean).length;
+  document.getElementById('paste-counter').textContent = w ? `${w.toLocaleString()} palabras` : '';
+}
+function loadManuscriptFromPaste() {
+  const text = document.getElementById('ms-paste').value.trim();
+  if (!text) return;
+  loadManuscript(text);
+}
+function loadManuscript(text) {
+  state.manuscrito = text;
+  saveState();
+  showManuscript(text);
+  showToast('Manuscrito cargado correctamente');
+}
+function showManuscript(text) {
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  const chars = text.length;
+  const pages = Math.ceil(words / 250);
+  const read = Math.ceil(words / 200);
+  document.getElementById('stat-words').textContent = words.toLocaleString();
+  document.getElementById('stat-chars').textContent = chars.toLocaleString();
+  document.getElementById('stat-pages').textContent = pages;
+  document.getElementById('stat-read').textContent = read;
+  document.getElementById('ms-stats').style.display = 'flex';
+  document.getElementById('ms-viewer').textContent = text.slice(0, 3000) + (text.length > 3000 ? '\n\n[... texto completo cargado en memoria ...]' : '');
+  document.getElementById('upload-area-wrap').style.display = 'none';
+  document.getElementById('ms-preview-wrap').style.display = 'block';
+  document.getElementById('word-count-sidebar').textContent = words.toLocaleString() + ' palabras';
+}
+function clearManuscript() {
+  state.manuscrito = '';
+  saveState();
+  document.getElementById('ms-stats').style.display = 'none';
+  document.getElementById('upload-area-wrap').style.display = 'block';
+  document.getElementById('ms-preview-wrap').style.display = 'none';
+  document.getElementById('ms-paste').value = '';
+  document.getElementById('paste-counter').textContent = '';
+  document.getElementById('word-count-sidebar').textContent = '— palabras';
+}
+
+// ═══════════════════════════════════════
+// CONTEXT
+// ═══════════════════════════════════════
+function saveContext() {
+  state.contexto = {
+    titulo: document.getElementById('ctx-titulo').value,
+    genero: document.getElementById('ctx-genero').value,
+    conflicto: document.getElementById('ctx-conflicto').value,
+    notas: document.getElementById('ctx-notas').value,
+  };
+  saveState();
+  const el = document.getElementById('ctx-saved');
+  el.style.display = 'inline';
+  setTimeout(() => el.style.display = 'none', 2000);
+}
+function populateContext() {
+  const c = state.contexto;
+  if (c.titulo) document.getElementById('ctx-titulo').value = c.titulo;
+  if (c.genero) document.getElementById('ctx-genero').value = c.genero;
+  if (c.conflicto) document.getElementById('ctx-conflicto').value = c.conflicto;
+  if (c.notas) document.getElementById('ctx-notas').value = c.notas;
+}
+
+// ═══════════════════════════════════════
+// CHARACTERS
+// ═══════════════════════════════════════
+const avatarColors = [
+  ['#fdf3d7','#7a4f00'],['#f0f7ef','#1e4019'],['#fdf0ed','#6b2010'],
+  ['#f0f4f8','#1e3050'],['#fdf5f5','#5a1010'],['#f5f0ff','#3d1a7a'],
+];
+function addChar() {
+  const nombre = document.getElementById('ch-nombre').value.trim();
+  if (!nombre) { showToast('Escribe el nombre del personaje'); return; }
+  state.personajes.push({
+    id: Date.now(), nombre,
+    rol: document.getElementById('ch-rol').value,
+    motivacion: document.getElementById('ch-motivacion').value,
+    miedo: document.getElementById('ch-miedo').value,
+    arco: document.getElementById('ch-arco').value,
+    secretos: document.getElementById('ch-secretos').value,
+    subtramas: document.getElementById('ch-subtramas').value,
+  });
+  saveState(); renderChars(); closeModal('modal-char');
+  ['ch-nombre','ch-motivacion','ch-miedo','ch-arco','ch-secretos','ch-subtramas'].forEach(id => document.getElementById(id).value = '');
+}
+function renderChars() {
+  const el = document.getElementById('chars-list');
+  if (!state.personajes.length) { el.innerHTML = '<div class="empty">Aún no has añadido personajes</div>'; return; }
+  const rolTag = { 'Protagonista':'tag-gold','Antagonista':'tag-danger','Amor interés':'tag-rust','Deuteragonista':'tag-sage' };
+  el.innerHTML = state.personajes.map((p, i) => {
+    const [bg, col] = avatarColors[i % avatarColors.length];
+    const ini = p.nombre.split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
+    return `<div class="char-row">
+      <div class="char-avatar" style="background:${bg};color:${col}">${ini}</div>
+      <div class="char-info">
+        <div class="char-name">${p.nombre} <span class="tag ${rolTag[p.rol] || 'tag-muted'}" style="margin-left:4px">${p.rol}</span></div>
+        <div class="char-meta">
+          ${p.motivacion ? `Quiere: ${p.motivacion}<br>` : ''}
+          ${p.miedo ? `Teme: ${p.miedo}<br>` : ''}
+          ${p.arco ? `Arco: ${p.arco}` : ''}
+        </div>
+      </div>
+      <button class="btn btn-sm btn-danger" onclick="deleteChar(${p.id})">✕</button>
+    </div>`;
+  }).join('');
+}
+function deleteChar(id) { state.personajes = state.personajes.filter(p => p.id !== id); saveState(); renderChars(); }
+
+// ═══════════════════════════════════════
+// CHAPTERS
+// ═══════════════════════════════════════
+function addCap() {
+  const num = document.getElementById('cap-num').value.trim();
+  const titulo = document.getElementById('cap-titulo').value.trim();
+  if (!num || !titulo) { showToast('Necesitas número y título'); return; }
+  state.capitulos.push({
+    id: Date.now(),
+    num: parseInt(num) || state.capitulos.length + 1,
+    titulo,
+    pov: document.getElementById('cap-pov').value,
+    estado: document.getElementById('cap-estado').value,
+    resumen: document.getElementById('cap-resumen').value,
+    funcion: document.getElementById('cap-funcion').value,
+    subtramas: document.getElementById('cap-subtramas').value,
+    tension: parseInt(document.getElementById('cap-tension').value) || 5,
+  });
+  state.capitulos.sort((a, b) => a.num - b.num);
+  saveState(); renderCaps(); closeModal('modal-cap');
+  ['cap-num','cap-titulo','cap-pov','cap-resumen','cap-funcion','cap-subtramas','cap-tension'].forEach(id => document.getElementById(id).value = '');
+}
+function renderCaps() {
+  const el = document.getElementById('caps-list');
+  if (!state.capitulos.length) { el.innerHTML = '<div class="empty">Aún no has añadido capítulos</div>'; return; }
+  const estadoTag = { 'borrador':'tag-gold','editado':'tag-sage','pendiente':'tag-muted' };
+  el.innerHTML = state.capitulos.map(c => `
+    <div class="chapter-item">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="ch-num">CAP. ${c.num}</div>
+          <div class="ch-title">${c.titulo}</div>
+          <div class="ch-meta">
+            ${c.pov ? `POV: ${c.pov} · ` : ''}Tensión: ${c.tension}/10
+            <span class="tag ${estadoTag[c.estado] || 'tag-muted'}" style="margin-left:6px">${c.estado}</span>
+            ${c.funcion ? ` · ${c.funcion}` : ''}
+          </div>
+          ${c.resumen ? `<div style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.4">${c.resumen.slice(0, 120)}${c.resumen.length > 120 ? '…' : ''}</div>` : ''}
+        </div>
+        <button class="btn btn-sm btn-danger" onclick="deleteCap(${c.id})">✕</button>
+      </div>
+    </div>`).join('');
+}
+function deleteCap(id) { state.capitulos = state.capitulos.filter(c => c.id !== id); saveState(); renderCaps(); }
+
+// ═══════════════════════════════════════
+// SUBTRAMAS
+// ═══════════════════════════════════════
+function addSubtrama() {
+  const nombre = document.getElementById('st-nombre').value.trim();
+  if (!nombre) { showToast('Escribe el nombre de la subtrama'); return; }
+  state.subtramas.push({
+    id: Date.now(), nombre,
+    tipo: document.getElementById('st-tipo').value,
+    personajes: document.getElementById('st-personajes').value,
+    inicio: document.getElementById('st-inicio').value,
+    cierre: document.getElementById('st-cierre').value,
+    impacto: document.getElementById('st-impacto').value,
+  });
+  saveState(); renderSubtramas(); closeModal('modal-subtrama');
+}
+function renderSubtramas() {
+  const el = document.getElementById('subtramas-list');
+  if (!state.subtramas.length) { el.innerHTML = '<div class="empty">Aún no has añadido subtramas</div>'; return; }
+  el.innerHTML = state.subtramas.map(s => `
+    <div class="card" style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:500;margin-bottom:4px">
+          ${s.nombre} <span class="tag tag-muted" style="margin-left:4px">${s.tipo}</span>
+        </div>
+        ${s.personajes ? `<div style="font-size:12px;color:var(--muted)">Personajes: ${s.personajes}</div>` : ''}
+        ${s.inicio ? `<div style="font-size:12px;color:var(--muted)">Inicio: ${s.inicio}${s.cierre ? ' → Cierre: ' + s.cierre : ''}</div>` : ''}
+        ${s.impacto ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">${s.impacto.slice(0, 100)}${s.impacto.length > 100 ? '…' : ''}</div>` : ''}
+      </div>
+      <button class="btn btn-sm btn-danger" onclick="deleteSubtrama(${s.id})">✕</button>
+    </div>`).join('');
+}
+function deleteSubtrama(id) { state.subtramas = state.subtramas.filter(s => s.id !== id); saveState(); renderSubtramas(); }
+
+// ═══════════════════════════════════════
+// ANALYSIS TABS
+// ═══════════════════════════════════════
+function switchAtab(id) {
+  document.querySelectorAll('.atab').forEach((t, i) => {
+    const ids = ['trama', 'personajes', 'ritmo', 'escenas'];
+    t.classList.toggle('active', ids[i] === id);
+  });
+  document.querySelectorAll('.atab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('atab-' + id).classList.add('active');
+}
+
+// ═══════════════════════════════════════
+// CONTEXT BUILDER
+// ═══════════════════════════════════════
+function buildContext(includeManuscript = true, maxMsChars = 12000) {
+  const c = state.contexto;
+  const pers = state.personajes.map(p =>
+    `- ${p.nombre} (${p.rol}): quiere "${p.motivacion}", teme "${p.miedo}", arco: "${p.arco}", secretos: "${p.secretos}", subtramas: "${p.subtramas}"`
+  ).join('\n');
+  const caps = state.capitulos.map(c =>
+    `- Cap.${c.num} "${c.titulo}" [POV:${c.pov || '—'}] [tensión:${c.tension}/10] [${c.estado}] [subtramas:${c.subtramas || '—'}]: ${c.resumen || 'sin resumen'}`
+  ).join('\n');
+  const subs = state.subtramas.map(s =>
+    `- "${s.nombre}" (${s.tipo}): personajes ${s.personajes}, inicio ${s.inicio}, cierre ${s.cierre}, impacto: ${s.impacto}`
+  ).join('\n');
+
+  let ms = '';
+  if (includeManuscript && state.manuscrito) {
+    const text = state.manuscrito.slice(0, maxMsChars);
+    ms = `\n\nMASCRITO (primeros ${Math.round(text.length / 5)} palabras aprox.):\n"""\n${text}${state.manuscrito.length > maxMsChars ? '\n[... continúa ...]' : ''}\n"""`;
+  }
+
+  return `NOVELA: "${c.titulo || 'Katala: La sangre no miente'}"
+GÉNERO: ${c.genero || 'novela histórica, oscura y romántica, golfo de Guinea s.XIX'}
+CONFLICTO CENTRAL: ${c.conflicto || 'identidad y origen en una isla fundada sobre mentiras'}
+NOTAS DE LA AUTORA: ${c.notas || '—'}
+
+PERSONAJES (${state.personajes.length}):
+${pers || 'No registrados — usar conocimiento del manuscrito'}
+
+CAPÍTULOS REGISTRADOS (${state.capitulos.length}):
+${caps || 'No registrados'}
+
+SUBTRAMAS (${state.subtramas.length}):
+${subs || 'No registradas'}${ms}`;
+}
+
+// ═══════════════════════════════════════
+// CLAUDE API
+// ═══════════════════════════════════════
+async function callClaude(prompt, loadingId, resultId, renderFn) {
+  if (!state.apiKey) {
+    openApiModal();
+    showToast('Configura tu API key primero');
+    return;
+  }
+  const lo = document.getElementById(loadingId);
+  const re = document.getElementById(resultId);
+  lo.classList.add('active');
+  re.innerHTML = '';
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': state.apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await r.json();
+    lo.classList.remove('active');
+    if (data.error) {
+      re.innerHTML = `<div class="result-block danger"><div class="rb-label">Error API</div>${data.error.message}</div>`;
+      return;
+    }
+    const text = data.content?.filter(b => b.type === 'text').map(b => b.text).join('') || '';
+    if (renderFn) renderFn(text, re);
+    else renderBlocks(text, re);
+  } catch (e) {
+    lo.classList.remove('active');
+    re.innerHTML = `<div class="result-block danger"><div class="rb-label">Error</div>No se pudo conectar con la API.</div>`;
+  }
+}
+
+function renderBlocks(text, el) {
+  const lines = text.split('\n').filter(l => l.trim());
+  let html = '';
+  lines.forEach(line => {
+    const l = line.replace(/^[-*#•▸→]+\s*/, '').trim();
+    if (!l) return;
+    const isWarn = /agujero|inconsisten|falt|error|problem|peligro|caída|débil|ausente|olvidado|contradicción|nunca|no aparece/i.test(l);
+    const isOk = /funciona|bien|sólido|logrado|correcto|fuerte|efectivo|destaca/i.test(l);
+    const isTip = /sugier|recomend|podrías|intenta|considera|añade|incluye|podría|sería útil/i.test(l);
+    const type = isWarn ? 'danger' : isOk ? 'ok' : isTip ? 'warn' : 'info';
+    const icon = isWarn ? '⚠' : isOk ? '✓' : isTip ? '→' : '·';
+    html += `<div class="result-block ${type}"><div class="rb-label">${type === 'danger' ? 'Problema' : type === 'ok' ? 'Funciona' : type === 'warn' ? 'Sugerencia' : 'Nota'}</div>${icon} ${l}</div>`;
+  });
+  el.innerHTML = html || `<div class="result-block info"><div class="rb-label">Resultado</div>${text}</div>`;
+}
+
+function renderRaw(text, el) {
+  el.innerHTML = `<div class="card" style="white-space:pre-wrap;font-family:'Cormorant Garamond',serif;font-size:15px;line-height:1.8">${text}</div>`;
+}
+
+// ═══════════════════════════════════════
+// ANALYSIS FUNCTIONS
+// ═══════════════════════════════════════
+async function analizarManuscritoCompleto() {
+  if (!state.manuscrito) { showToast('Carga el manuscrito primero'); return; }
+  const ctx = buildContext(true, 14000);
+  const prompt = `Eres un editor literario profesional con experiencia en novela histórica y novela web de entretenimiento. Has recibido el siguiente manuscrito y contexto para analizarlo.
+
+INSTRUCCIÓN CRÍTICA: Antes de señalar cualquier problema, VERIFICA que realmente existe en el texto. No inventes escenas faltantes que ya están escritas. Si ves que algo está presente en el manuscrito, dilo. Solo señala lo que genuinamente falta o está mal.
+
+Analiza:
+1. Agujeros de trama reales (contradicciones lógicas, causas sin efecto, efectos sin causa)
+2. Elementos mencionados y no desarrollados (personajes nombrados y olvidados, promesas narrativas no cumplidas)  
+3. Lo que funciona bien y debe conservarse
+4. Problemas de coherencia interna
+5. Personajes que aparecen o desaparecen sin justificación
+
+Un punto por línea. Sé específico — menciona páginas o escenas concretas cuando puedas identificarlas.
+
+${ctx}`;
+  switchAtab('trama');
+  await callClaude(prompt, 'loading-trama', 'result-trama');
+}
+
+async function analizarPersonajesIA() {
+  const ctx = buildContext(true, 10000);
+  const prompt = `Eres un editor literario especializado en desarrollo de personajes. Analiza los arcos de cada personaje principal en este manuscrito.
+
+INSTRUCCIÓN CRÍTICA: Basa tu análisis en lo que REALMENTE aparece en el texto, no en lo que debería aparecer teóricamente.
+
+Para cada personaje principal detecta:
+- Si su motivación es coherente con sus acciones en el texto
+- Si tiene momentos de agencia real (decisiones que cambian la trama) o solo reacciona
+- Si su voz y comportamiento son consistentes entre escenas
+- Si su arco tiene desarrollo visible en el texto o se queda plano
+- Qué le falta específicamente para ser más memorable
+
+Un punto por línea, indicando el personaje al inicio de cada punto.
+
+${ctx}`;
+  await callClaude(prompt, 'loading-pers-analisis', 'result-pers-analisis');
+}
+
+async function analizarRitmo() {
+  const ctx = buildContext(true, 10000);
+  const prompt = `Eres un editor experto en narrativa de entretenimiento y novela web. Analiza el ritmo y la tensión de este manuscrito.
+
+INSTRUCCIÓN CRÍTICA: Analiza el texto real, no el resumen. Identifica escenas específicas.
+
+Evalúa:
+- La curva de tensión capítulo a capítulo (¿hay caídas peligrosas de más de 2-3 capítulos?)
+- Los finales de capítulo: ¿terminan con gancho o en neutro?
+- El equilibrio entre escenas de acción/tensión y escenas de respiro emocional
+- Los puntos de giro: ¿están bien distribuidos?
+- El clímax: ¿está bien posicionado o llega demasiado tarde/temprano?
+- Capítulos específicos donde la tensión baja sin recompensa
+
+Un punto por línea, mencionando capítulos o escenas concretas.
+
+${ctx}`;
+  await callClaude(prompt, 'loading-ritmo', 'result-ritmo');
+}
+
+async function analizarEscenasFaltantes() {
+  const ctx = buildContext(true, 12000);
+  const prompt = `Eres un editor literario profesional. Analiza este manuscrito y detecta ÚNICAMENTE las escenas que genuinamente faltan — no las que ya están escritas.
+
+INSTRUCCIÓN CRÍTICA ABSOLUTA: Lee el manuscrito con atención. Si una escena está presente, aunque sea brevemente, NO la señales como faltante. Solo señala huecos reales: promesas narrativas que el texto hace y no cumple, subtramas que se abren y no se cierran, personajes que desaparecen sin explicación, transiciones imposibles entre escenas.
+
+Para cada escena faltante indica:
+- Qué falta exactamente
+- Por qué es necesaria (qué hueco narrativo deja su ausencia)
+- Dónde debería insertarse (entre qué escenas o capítulos)
+
+Un punto por línea.
+
+${ctx}`;
+  await callClaude(prompt, 'loading-escenas', 'result-escenas');
+}
+
+async function verificarContinuidad() {
+  const query = document.getElementById('cont-query').value.trim();
+  if (!query) { showToast('Escribe qué quieres verificar'); return; }
+  const ctx = buildContext(true, 12000);
+  const prompt = `Eres un editor literario especializado en continuidad narrativa. La autora te hace la siguiente consulta específica sobre su manuscrito:
+
+CONSULTA: "${query}"
+
+Busca en el manuscrito y en el contexto del proyecto y responde de manera específica y honesta. Si algo está presente en el texto, dilo. Si algo falta o contradice, dilo. Cita el texto cuando puedas.
+
+${ctx}`;
+  await callClaude(prompt, 'loading-cont', 'result-cont', renderRaw);
+}
+
+async function continuidad_general() {
+  const ctx = buildContext(true, 12000);
+  const prompt = `Eres un editor literario especializado en continuidad narrativa. Realiza una revisión general de continuidad de este manuscrito.
+
+Busca específicamente:
+1. Personajes que aparecen en una escena y luego están en otro lugar sin transición explicada
+2. Objetos, información o elementos que aparecen antes de ser introducidos
+3. Subtramas que se abren y luego desaparecen sin cierre ni mención
+4. Contradicciones entre lo que un personaje sabe en diferentes escenas
+5. Inconsistencias de tiempo (algo que ocurre al amanecer y luego es de noche sin pasar el día)
+6. Cualquier cosa que se mencione en el texto como relevante y luego no vuelva a aparecer
+
+Sé específico. Cita el texto cuando puedas. Un punto por línea.
+
+${ctx}`;
+  await callClaude(prompt, 'loading-cont', 'result-cont');
+}
+
+async function analizarArcoPersonaje() {
+  const nombre = document.getElementById('arco-personaje').value.trim();
+  const ctx = buildContext(true, 12000);
+  const prompt = `Eres un editor literario especializado en desarrollo de personajes. Analiza ${nombre ? `el arco específico de ${nombre}` : 'los arcos de todos los personajes principales'} en este manuscrito.
+
+INSTRUCCIÓN: Basa el análisis en el texto real. Para cada personaje que analices, indica:
+- Sus momentos de mayor definición en el texto (escenas donde más se ve quién es)
+- Si tiene agencia real (decisiones que cambian algo) o solo reacciona
+- La coherencia de su voz y comportamiento a lo largo del texto
+- Lo que genuinamente le falta para cerrar su arco de manera satisfactoria
+- Una sugerencia concreta de qué tipo de escena o momento le daría mayor profundidad
+
+${ctx}`;
+  await callClaude(prompt, 'loading-arcos', 'result-arcos', renderRaw);
+}
+
+// ═══════════════════════════════════════
+// EDITOR
+// ═══════════════════════════════════════
+function setEdMode(mode) {
+  edMode = mode;
+  document.querySelectorAll('[id^="ed-btn-"]').forEach(b => {
+    b.classList.remove('btn-primary');
+    b.classList.add('btn');
+  });
+  document.getElementById('ed-btn-' + mode).classList.add('btn-primary');
+}
+
+function updateEdCounter() {
+  const v = document.getElementById('ed-texto').value;
+  const w = v.trim().split(/\s+/).filter(Boolean).length;
+  document.getElementById('ed-counter').textContent = w ? `${w.toLocaleString()} palabras` : '';
+}
+
+async function editarTexto() {
+  const texto = document.getElementById('ed-texto').value.trim();
+  if (!texto) { showToast('Pega el texto a revisar'); return; }
+  const c = state.contexto;
+  const modos = {
+    gramatica: 'Corrige ÚNICAMENTE errores ortográficos, gramaticales y de puntuación. No cambies ninguna palabra, no mejores el estilo, no reescribas frases. Solo corrige errores. Mantén la voz de la autora exactamente como está.',
+    estilo: 'Corrige gramática y puntuación. Además mejora la fluidez donde el texto se sienta rígido o torpe, pero sin cambiar la voz de la autora ni reescribir frases completas que ya funcionan.',
+    dialogo: 'Corrige gramática en los diálogos y evalúa si suenan naturales y auténticos para la época y personajes. Indica qué líneas se sienten forzadas y por qué, y sugiere alternativas.',
+    descripcion: 'Corrige gramática y enriquece las descripciones ambientales añadiendo UN detalle sensorial específico por párrafo (visual, sonido, olor o textura). No hagas la descripción larga — solo más concreta. Mantén la voz de la autora.',
+  };
+  const prompt = `Eres un corrector literario profesional. INSTRUCCIÓN: ${modos[edMode]}
+
+Contexto de la novela: "${c.titulo || 'Katala'}", ${c.genero || 'novela histórica'}, tono: oscuro y romántico.
+
+TEXTO A REVISAR:
+${texto}
+
+Presenta primero el texto corregido completo, luego una lista breve de los cambios realizados.`;
+  await callClaude(prompt, 'loading-edicion', 'result-edicion', renderRaw);
+}
+
+// ═══════════════════════════════════════
+// DESCRIPCIONES
+// ═══════════════════════════════════════
+async function mejorarDescripcion() {
+  const texto = document.getElementById('desc-texto').value.trim();
+  const espacio = document.getElementById('desc-espacio').value.trim();
+  const ctx = buildContext(false);
+  const prompt = `Eres un editor literario especializado en escritura sensorial. ${texto ? `Enriquece la descripción del siguiente fragmento añadiendo detalles sensoriales específicos del espacio "${espacio || 'indicado en el texto'}". Regla: máximo UN detalle sensorial nuevo por párrafo. Que sea concreto y específico, no genérico. Mantén la voz de la autora.` : `Da una guía específica de cómo describir "${espacio}" para esta novela.`}
+
+La novela tiene este tono: oscuro, romántico, golfo de Guinea siglo XIX, colores dorados y profundos, calor húmedo, contrastes sociales fuertes.
+
+${texto ? `FRAGMENTO:\n${texto}` : ''}
+
+${ctx}`;
+  await callClaude(prompt, 'loading-desc', 'result-desc', renderRaw);
+}
+
+async function guiaDescripciones() {
+  const ctx = buildContext(false);
+  const prompt = `Eres un editor literario especializado en escritura sensorial para novela histórica. Da una guía práctica de descripciones para esta novela específica.
+
+La guía debe incluir:
+1. Qué espacios de Katala necesitan más descripción urgente y por qué
+2. El vocabulario sensorial específico para el tono y época de esta novela (no genérico)
+3. La regla de "descripción en movimiento": cómo describir sin frenar el ritmo
+4. Cuándo NO describir (momentos de alta tensión donde la descripción mata el ritmo)
+5. Tres ejemplos de cómo transformar una descripción plana en una viva, usando el tono de esta novela
+
+${ctx}`;
+  await callClaude(prompt, 'loading-desc', 'result-desc', renderRaw);
+}
+
+// ═══════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); });
+});
+
+// Set default edit mode button
+setEdMode('gramatica');
+
+// Load state
+loadState();
+</script>
+</body>
+</html>
