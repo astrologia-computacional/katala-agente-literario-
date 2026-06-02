@@ -643,7 +643,7 @@ input:focus, textarea:focus, select:focus {
         <span class="nav-icon">🖼</span> Descripciones
       </div>
     </div>
-    <div class="sidebar-footer">
+    <div class="sidebar-footer" style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;gap:6px;margin-bottom:4px"><button class="btn btn-sm" style="flex:1;font-size:10px;padding:4px 6px;background:rgba(212,168,67,0.15);border-color:rgba(212,168,67,0.3);color:var(--gold-light)" onclick="exportData()">⬇ Exportar</button><button class="btn btn-sm" style="flex:1;font-size:10px;padding:4px 6px;background:rgba(212,168,67,0.15);border-color:rgba(212,168,67,0.3);color:var(--gold-light)" onclick="importData()">⬆ Importar</button></div>
       Katala v1.0<br>
       Arlete Sam © 2025<br>
       <span id="word-count-sidebar">— palabras</span>
@@ -1137,7 +1137,8 @@ async function saveApiKey() {
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 10, messages: [{ role: 'user', content: 'ok' }] })
     });
     if (r.ok || r.status === 400) {
@@ -1442,7 +1443,8 @@ async function callClaude(prompt, loadingId, resultId, renderFn) {
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': state.apiKey,
-        'anthropic-version': '2023-06-01'
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
@@ -1687,6 +1689,43 @@ ${ctx}`;
 // ═══════════════════════════════════════
 // UTILITIES
 // ═══════════════════════════════════════
+function exportData() {
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'katala-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Datos exportados correctamente');
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const imported = JSON.parse(ev.target.result);
+        state = { ...state, ...imported };
+        if (state.apiKey) updateApiStatus(true);
+        if (state.manuscrito) showManuscript(state.manuscrito);
+        if (state.contexto) populateContext();
+        renderChars(); renderCaps(); renderSubtramas();
+        saveState();
+        showToast('Datos importados correctamente');
+      } catch(e) { showToast('Error al importar el archivo'); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
